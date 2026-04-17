@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Taskr</title>
+<style>
+:root{
+  --bg:#f4f3ef;--panel:#fff;--sidebar:#faf9f6;
+  --hover:#f0efe9;--active:#e8e6de;
+  --text:#1c1b18;--text-2:#6b6a64;--text-3:#a8a79f;
+  --border:rgba(0,0,0,0.08);--border-2:rgba(0,0,0,0.15);
+  --indigo:#4f46e5;--indigo-bg:#ede9fe;--indigo-br:#a5b4fc;
+  --red:#dc2626;--red-bg:#fee2e2;
+  --green:#16a34a;--green-bg:#dcfce7;
+  --amber:#d97706;--amber-bg:#fef3c7;
+  --blue:#1a56a0;--blue-bg:#e8f0fe;
+  --radius:8px;--radius-lg:12px;
+  --font:'DM Sans',-apple-system,system-ui,sans-serif;
+}
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;display:flex;height:100vh;overflow:hidden;}
+button,input,textarea,select{font-family:inherit;}
+
+/* SIDEBAR */
+.sidebar{width:220px;background:var(--sidebar);border-right:0.5px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
+.logo{padding:18px 16px 12px;font-size:17px;font-weight:600;letter-spacing:-0.03em;display:flex;align-items:center;gap:8px;}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--indigo);}
+.sb-section{padding:10px 14px 4px;font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;}
+.sb-item{display:flex;align-items:center;gap:9px;padding:7px 12px;border-radius:var(--radius);margin:1px 6px;cursor:pointer;font-size:13px;color:var(--text-2);user-select:none;transition:all 0.12s;}
+.sb-item:hover{background:var(--hover);color:var(--text);}
+.sb-item.active{background:var(--active);color:var(--text);font-weight:500;}
+.sb-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.sb-count{margin-left:auto;font-size:11px;background:var(--active);color:var(--text-2);padding:1px 7px;border-radius:20px;font-weight:500;}
+.sb-icon{width:18px;text-align:center;flex-shrink:0;font-size:14px;}
+.sb-bottom{margin-top:auto;padding:10px 6px;border-top:0.5px solid var(--border);}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.topbar{background:var(--panel);border-bottom:0.5px solid var(--border);padding:0 20px;display:flex;align-items:center;gap:10px;height:50px;flex-shrink:0;}
+.topbar-title{font-size:14px;font-weight:600;flex:1;}
+.add-btn{font-size:12px;padding:6px 14px;border-radius:var(--radius);border:none;background:var(--text);color:#fff;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;}
+.add-btn:hover{opacity:0.85;}
+
+/* FILTERBAR */
+.filterbar{background:var(--panel);border-bottom:0.5px solid var(--border);padding:8px 20px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex-shrink:0;}
+.flabel{font-size:11px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;}
+.fgroup{position:relative;}
+.fbtn{font-size:12px;padding:4px 10px;border-radius:var(--radius);border:0.5px solid var(--border);background:transparent;color:var(--text-2);cursor:pointer;display:flex;align-items:center;gap:4px;white-space:nowrap;}
+.fbtn:hover{border-color:var(--border-2);background:var(--hover);}
+.fbtn.on{background:var(--indigo-bg);border-color:var(--indigo-br);color:#5b21b6;}
+.chev{width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg);display:inline-block;margin-top:-2px;}
+.fsep{width:1px;height:16px;background:var(--border);}
+.fbtn-plain{font-size:12px;padding:4px 10px;border-radius:var(--radius);border:0.5px solid var(--border);background:transparent;color:var(--text-3);cursor:pointer;}
+.fbtn-plain:hover{background:var(--hover);color:var(--text-2);}
+.dd{position:absolute;top:calc(100% + 5px);left:0;background:var(--panel);border:0.5px solid var(--border-2);border-radius:var(--radius-lg);min-width:180px;z-index:200;box-shadow:0 4px 20px rgba(0,0,0,0.10);overflow:hidden;}
+.dd-item{font-size:13px;padding:7px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;}
+.dd-item:hover{background:var(--hover);}
+.dd-ck{width:14px;height:14px;border-radius:3px;border:0.5px solid var(--border-2);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.dd-ck.on{background:var(--indigo-bg);border-color:var(--indigo-br);}
+.dd-ck-i{width:7px;height:7px;border-radius:2px;background:#5b21b6;}
+.dd-radio{width:14px;height:14px;border-radius:50%;border:0.5px solid var(--border-2);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.dd-radio.on{border-color:var(--indigo);border-width:1.5px;}
+.dd-radio-i{width:7px;height:7px;border-radius:50%;background:var(--indigo);}
+.chips-bar{display:flex;gap:5px;flex-wrap:wrap;padding:6px 20px;background:var(--bg);border-bottom:0.5px solid var(--border);align-items:center;}
+.chip{font-size:11px;padding:2px 9px;border-radius:20px;display:flex;align-items:center;gap:4px;background:var(--indigo-bg);color:#5b21b6;}
+.chip-sort{background:var(--amber-bg);color:#92400e;}
+.chip-x{cursor:pointer;opacity:0.55;font-size:13px;line-height:1;}
+.chip-x:hover{opacity:1;}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;padding:16px 20px;}
+.slabel{font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.empty{font-size:13px;color:var(--text-3);padding:32px 0;text-align:center;}
+
+/* TASK CARDS */
+.task{background:var(--panel);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:11px 14px;margin-bottom:6px;display:flex;align-items:flex-start;gap:10px;}
+.task:hover{border-color:var(--border-2);}
+.task.done{opacity:0.45;}
+.task.done .ttl{text-decoration:line-through;}
+.status{position:relative;flex-shrink:0;margin-top:1px;}
+.status-btn{font-size:11px;padding:3px 9px;border-radius:20px;cursor:pointer;display:flex;align-items:center;gap:4px;border:0.5px solid var(--border);white-space:nowrap;user-select:none;}
+.status-btn:hover{border-color:var(--border-2);}
+.sdot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.s-todo{background:#f1f0eb;color:#6b6a64;}
+.s-wait{background:var(--amber-bg);color:#92400e;border-color:#fde68a;}
+.s-doing{background:var(--blue-bg);color:var(--blue);border-color:#bfdbfe;}
+.s-done{background:var(--green-bg);color:#166534;border-color:#86efac;}
+.status-menu{position:absolute;top:calc(100% + 4px);left:0;background:var(--panel);border:0.5px solid var(--border-2);border-radius:var(--radius-lg);min-width:145px;z-index:300;box-shadow:0 4px 16px rgba(0,0,0,0.10);overflow:hidden;}
+.s-opt{font-size:13px;padding:7px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;}
+.s-opt:hover{background:var(--hover);}
+.tbody{flex:1;min-width:0;}
+.ttl{font-size:13px;margin-bottom:5px;line-height:1.4;}
+.tmeta{display:flex;gap:5px;flex-wrap:wrap;align-items:center;}
+.tcom{margin-top:7px;font-size:12px;color:var(--text-3);border-top:0.5px solid var(--border);padding-top:7px;line-height:1.5;}
+.tfiles{margin-top:6px;display:flex;gap:5px;flex-wrap:wrap;}
+.file-chip{font-size:11px;padding:2px 9px;border-radius:20px;background:var(--hover);color:var(--text-2);border:0.5px solid var(--border);display:flex;align-items:center;gap:4px;cursor:pointer;}
+.file-chip:hover{border-color:var(--border-2);}
+.tacts{display:flex;gap:4px;flex-shrink:0;}
+.abtn{font-size:11px;padding:3px 9px;border-radius:var(--radius);border:0.5px solid var(--border);background:transparent;color:var(--text-3);cursor:pointer;white-space:nowrap;}
+.abtn:hover{background:var(--hover);color:var(--text-2);}
+.abtn.primary:hover{background:var(--indigo-bg);color:#5b21b6;border-color:var(--indigo-br);}
+.badge{font-size:11px;padding:2px 8px;border-radius:20px;}
+.b-soc{background:var(--blue-bg);color:var(--blue);}
+.b-date{background:var(--hover);color:var(--text-2);}
+.b-late{background:var(--red-bg);color:var(--red);}
+.done-toggle{cursor:pointer;font-size:12px;color:var(--text-3);display:flex;align-items:center;gap:6px;padding:8px 0;border-top:0.5px solid var(--border);margin-top:6px;user-select:none;}
+.done-toggle:hover{color:var(--text-2);}
+
+/* SETTINGS */
+.settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;}
+.ss{background:var(--panel);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px;}
+.ss-title{font-size:12px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:12px;}
+.ss-list{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+.ss-row{display:flex;align-items:center;gap:8px;padding:7px 10px;border:0.5px solid var(--border);border-radius:var(--radius);}
+.ss-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.ss-name{font-size:13px;flex:1;}
+.ss-cnt{font-size:11px;color:var(--text-3);}
+.ss-btn{font-size:11px;padding:2px 7px;border-radius:5px;border:0.5px solid var(--border);background:transparent;color:var(--text-3);cursor:pointer;}
+.ss-btn:hover{background:var(--hover);color:var(--text-2);}
+.ss-btn.del:hover{background:var(--red-bg);color:var(--red);border-color:#fca5a5;}
+.ss-add{display:flex;gap:6px;}
+.ss-inp{font-size:12px;padding:5px 9px;border-radius:var(--radius);border:0.5px solid var(--border);background:var(--bg);flex:1;outline:none;}
+.ss-inp:focus{border-color:var(--indigo-br);}
+.ss-add-btn{font-size:12px;padding:5px 12px;border-radius:var(--radius);border:0.5px solid var(--indigo-br);background:var(--indigo-bg);color:var(--indigo);cursor:pointer;font-weight:500;}
+.ss-add-btn:hover{background:#ddd6fe;}
+.cpicker{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;}
+.cdot{width:18px;height:18px;border-radius:50%;cursor:pointer;border:2px solid transparent;}
+.cdot:hover{transform:scale(1.2);}
+.cdot.sel{border-color:var(--text);}
+
+/* DASHBOARD */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.stat{background:var(--panel);border:0.5px solid var(--border);border-radius:var(--radius);padding:14px;}
+.stat-num{font-size:22px;font-weight:600;}
+.stat-lbl{font-size:11px;color:var(--text-3);margin-top:2px;}
+.dash{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;}
+.pie-wrap{display:flex;align-items:center;gap:20px;}
+.pie-legend{display:flex;flex-direction:column;gap:7px;min-width:130px;flex:1;}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-2);}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.legend-val{margin-left:auto;font-weight:500;color:var(--text);font-size:13px;}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.30);display:flex;align-items:center;justify-content:center;padding:24px;z-index:400;}
+.modal{background:var(--panel);border-radius:var(--radius-lg);border:0.5px solid var(--border-2);width:100%;max-width:460px;box-shadow:0 8px 40px rgba(0,0,0,0.14);display:flex;flex-direction:column;max-height:90vh;}
+.mh{padding:14px 18px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.mh-title{font-size:15px;font-weight:600;}
+.mclose{background:none;border:none;font-size:20px;color:var(--text-3);cursor:pointer;padding:0 4px;line-height:1;}
+.mclose:hover{color:var(--text);}
+.mb{padding:16px 18px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;}
+.fl{font-size:12px;color:var(--text-2);margin-bottom:4px;font-weight:500;}
+.fi{font-size:13px;padding:7px 10px;border-radius:var(--radius);border:0.5px solid var(--border);background:var(--bg);width:100%;outline:none;}
+.fi:focus{border-color:var(--indigo-br);}
+textarea.fi{resize:vertical;min-height:60px;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mf{padding:12px 18px;border-top:0.5px solid var(--border);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;}
+.btn-c{font-size:13px;padding:7px 14px;border-radius:var(--radius);border:0.5px solid var(--border);background:transparent;color:var(--text-2);cursor:pointer;}
+.btn-c:hover{background:var(--hover);}
+.btn-s{font-size:13px;padding:7px 14px;border-radius:var(--radius);background:var(--indigo);color:#fff;border:none;cursor:pointer;font-weight:500;}
+.btn-s:hover{opacity:0.88;}
+.btn-del{font-size:12px;padding:5px 12px;border-radius:var(--radius);border:0.5px solid #fca5a5;background:transparent;color:var(--red);cursor:pointer;}
+.btn-del:hover{background:var(--red-bg);}
+.attach-zone{border:0.5px dashed var(--border-2);border-radius:var(--radius);padding:10px 14px;cursor:pointer;font-size:12px;color:var(--text-3);text-align:center;display:block;}
+.attach-zone:hover{border-color:var(--indigo-br);background:var(--indigo-bg);color:var(--indigo);}
+.fmodal-list{display:flex;flex-direction:column;gap:4px;}
+.fmodal-row{display:flex;align-items:center;gap:8px;font-size:12px;padding:4px 8px;border-radius:var(--radius);background:var(--bg);border:0.5px solid var(--border);}
+.fmodal-name{flex:1;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.attach-x{cursor:pointer;opacity:0.5;font-size:14px;}
+.attach-x:hover{opacity:1;color:var(--red);}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:10px 18px;border-radius:var(--radius);font-size:13px;z-index:500;opacity:0;transition:opacity 0.25s;pointer-events:none;}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo"><span class="logo-dot"></span>Taskr</div>
+  <div class="sb-section">Espaces</div>
+  <div id="sb-spaces"></div>
+  <div class="sb-section">Vues</div>
+  <div class="sb-item" id="nav-dashboard" onclick="setView('dashboard')"><span class="sb-icon">📊</span>Tableau de bord</div>
+  <div class="sb-item" id="nav-all" onclick="setView('all')"><span class="sb-icon">☑</span>Toutes les tâches <span class="sb-count" id="all-count">0</span></div>
+  <div class="sb-item" id="nav-done" onclick="setView('done')"><span class="sb-icon">✓</span>Terminées</div>
+  <div class="sb-bottom">
+    <div class="sb-item" id="nav-settings" onclick="setView('settings')" style="margin:0;color:var(--text-3);">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Paramètres
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">Tableau de bord</div>
+    <button class="add-btn" id="add-btn" onclick="openAddTask()" style="display:none;"><span style="font-size:15px;line-height:1;">+</span> Nouvelle tâche</button>
+  </div>
+  <div id="filterbar-wrap" style="display:none;">
+    <div class="filterbar" id="filterbar"></div>
+    <div class="chips-bar" id="chips-bar" style="display:none;"></div>
+  </div>
+  <div class="content" id="content"></div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+/*═══════════════════════════════════════════════
+  STATE & STORAGE
+═══════════════════════════════════════════════*/
+const STORAGE_KEY='taskr_v2_notasks_removed';
+const TODAY=new Date().toISOString().slice(0,10);
+
+const COLORS=['#4f46e5','#0891b2','#059669','#d97706','#dc2626','#7c3aed','#db2777','#16a34a'];
+const BADGE_COLORS=[
+  {bg:'#e8f0fe',txt:'#1a56a0'},{bg:'#ccfbf1',txt:'#0f766e'},
+  {bg:'#dcfce7',txt:'#166534'},{bg:'#fef3c7',txt:'#92400e'},
+  {bg:'#fee2e2',txt:'#991b1b'},{bg:'#ede9fe',txt:'#5b21b6'},
+  {bg:'#fce7f3',txt:'#9d174d'},{bg:'#dcfce7',txt:'#166534'},
+];
+const STATUSES=['À faire','En attente','En cours','Terminé'];
+const DATE_FILTERS=["Aujourd'hui",'Cette semaine','En retard','Ce mois'];
+const SORT_OPTIONS=[
+  {id:'date-asc',label:'Date ↑ (plus proche)'},
+  {id:'date-desc',label:'Date ↓ (plus lointaine)'},
+  {id:'prio-desc',label:'Priorité ↓ (plus haute)'},
+  {id:'prio-asc',label:'Priorité ↑ (plus basse)'},
+  {id:'created',label:'Ordre de création'},
+];
+
+function defaultData(){
+  return{
+    spaces:[
+      {id:1,name:'Mes tâches',color:0},
+      {id:2,name:'CSIR',color:3},
+      {id:3,name:'Optima Santé',color:2},
+      {id:4,name:"Seren'idel",color:4},
+    ],
+    cats:[
+      {id:1,name:'Stratégie',color:5},
+      {id:2,name:'Juridique',color:4},
+      {id:3,name:'Commercial',color:0},
+      {id:4,name:'Reporting',color:2},
+      {id:5,name:'RH',color:1},
+    ],
+    prios:[
+      {id:1,name:'Prioritaire',color:6,rank:4},
+      {id:2,name:'Urgent',color:4,rank:3},
+      {id:3,name:'Moyen',color:3,rank:2},
+      {id:4,name:'Faible',color:2,rank:1},
+    ],
+    tasks:[
+      {id:1,title:'Préparer la présentation Q2',spaceId:2,cat:'Stratégie',date:nextBizDay(0),prio:'Urgent',status:'En cours',comment:'Slides à valider',files:[]},
+      {id:2,title:'Relire le contrat fournisseur',spaceId:2,cat:'Juridique',date:nextBizDay(5),prio:'Moyen',status:'À faire',comment:'Clause 8.2',files:[]},
+      {id:3,title:'Appel de suivi',spaceId:3,cat:'Commercial',date:nextBizDay(3),prio:'Faible',status:'En attente',comment:'',files:[]},
+      {id:4,title:'Tableau de bord KPIs',spaceId:4,cat:'Reporting',date:nextBizDay(10),prio:'Prioritaire',status:'À faire',comment:'',files:[]},
+      {id:5,title:'Point RH mensuel',spaceId:1,cat:'RH',date:nextBizDay(2),prio:'Moyen',status:'À faire',comment:'',files:[]},
+    ],
+    nextId:100,
+  };
+}
+
+function nextBizDay(add){
+  const d=new Date();let c=0;
+  while(c<add){d.setDate(d.getDate()+1);if(d.getDay()!==0&&d.getDay()!==6)c++;}
+  return d.toISOString().slice(0,10);
+}
+
+function loadData(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const d=JSON.parse(raw);
+      if(d&&d.spaces&&d.cats&&d.prios&&d.tasks)return d;
+    }
+  }catch(e){}
+  return defaultData();
+}
+function saveData(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(D));}catch(e){}}
+
+let D=loadData();
+
+// Migration: ensure prios have rank field
+D.prios.forEach((p,i)=>{if(p.rank===undefined)p.rank=D.prios.length-i;});
+saveData();
+
+let V={
+  view:'dashboard',
+  space:0,
+  doneOpen:true,
+  filters:{soc:[],cat:[],prio:[],status:[],date:[]},
+  sort:'date-asc',
+  openStatusId:null,
+  openMenuKey:null,
+  modalFiles:[],
+  editColorIdx:undefined,
+};
+
+/*═══════════════════════════════════════════════
+  ARCHIVING (> 2 days)
+═══════════════════════════════════════════════*/
+function archiveOld(){
+  const cutoff=new Date();cutoff.setDate(cutoff.getDate()-2);
+  const cutoffStr=cutoff.toISOString().slice(0,10);
+  D.tasks.forEach(t=>{
+    if(t.status==='Terminé'&&!t.doneDate)t.doneDate=TODAY;
+    if(t.status==='Terminé'&&t.doneDate&&t.doneDate<cutoffStr)t.archived=true;
+  });
+  saveData();
+}
+archiveOld();
+
+/*═══════════════════════════════════════════════
+  UTILITIES
+═══════════════════════════════════════════════*/
+const $=s=>document.querySelector(s);
+function fmtDate(d){if(!d)return'';const[y,m,day]=d.split('-');const ms=['jan','fév','mar','avr','mai','jui','juil','aoû','sep','oct','nov','déc'];return day+' '+ms[parseInt(m)-1];}
+function isLate(d){return d&&d<TODAY;}
+function nextWorkday(d){const dt=new Date(d+'T12:00:00');dt.setDate(dt.getDate()+1);while(dt.getDay()===0||dt.getDay()===6)dt.setDate(dt.getDate()+1);return dt.toISOString().slice(0,10);}
+function getSpace(id){return D.spaces.find(s=>s.id===id);}
+function getSpaceName(id){return getSpace(id)?.name||'—';}
+function getCatColor(name){const c=D.cats.find(x=>x.name===name);return c?BADGE_COLORS[c.color%BADGE_COLORS.length]:BADGE_COLORS[7];}
+function getPrioColor(name){const p=D.prios.find(x=>x.name===name);return p?BADGE_COLORS[p.color%BADGE_COLORS.length]:BADGE_COLORS[7];}
+function getPrioRank(name){const p=D.prios.find(x=>x.name===name);return p?p.rank:0;}
+function statusDotColor(s){if(s==='Terminé')return'#16a34a';if(s==='En cours')return'#1a56a0';if(s==='En attente')return'#d97706';return'#9ca3af';}
+function statusClass(s){if(s==='Terminé')return's-done';if(s==='En cours')return's-doing';if(s==='En attente')return's-wait';return's-todo';}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(window._tT);window._tT=setTimeout(()=>t.classList.remove('show'),1800);}
+
+/*═══════════════════════════════════════════════
+  ROUTING
+═══════════════════════════════════════════════*/
+function setView(v){
+  V.view=v;
+  V.filters={soc:[],cat:[],prio:[],status:[],date:[]};
+  V.openStatusId=null;V.openMenuKey=null;
+  updateChrome();renderSidebar();render();
+}
+function setSpace(i){
+  V.space=i;V.view='space';
+  V.filters={soc:[],cat:[],prio:[],status:[],date:[]};
+  V.openStatusId=null;V.openMenuKey=null;
+  updateChrome();renderSidebar();render();
+}
+function updateChrome(){
+  const titleEl=$('#topbar-title'),addBtn=$('#add-btn'),fb=$('#filterbar-wrap');
+  if(V.view==='space'){titleEl.textContent=D.spaces[V.space].name;addBtn.style.display='flex';fb.style.display='block';renderFilterbar();}
+  else if(V.view==='all'){titleEl.textContent='Toutes les tâches';addBtn.style.display='flex';fb.style.display='block';renderFilterbar();}
+  else if(V.view==='done'){titleEl.textContent='Tâches terminées';addBtn.style.display='none';fb.style.display='none';}
+  else if(V.view==='dashboard'){titleEl.textContent='Tableau de bord';addBtn.style.display='none';fb.style.display='none';}
+  else if(V.view==='settings'){titleEl.textContent='Paramètres';addBtn.style.display='none';fb.style.display='none';}
+  renderChips();
+}
+
+/*═══════════════════════════════════════════════
+  SIDEBAR
+═══════════════════════════════════════════════*/
+function renderSidebar(){
+  $('#sb-spaces').innerHTML=D.spaces.map((sp,i)=>{
+    const col=COLORS[sp.color%COLORS.length];
+    const cnt=D.tasks.filter(t=>t.spaceId===sp.id&&t.status!=='Terminé'&&!t.archived).length;
+    const active=V.view==='space'&&V.space===i;
+    return`<div class="sb-item${active?' active':''}" onclick="setSpace(${i})">
+      <span class="sb-dot" style="background:${col};"></span>${esc(sp.name)}
+      ${cnt>0?`<span class="sb-count">${cnt}</span>`:''}
+    </div>`;
+  }).join('');
+  const allCnt=D.tasks.filter(t=>t.status!=='Terminé'&&!t.archived).length;
+  $('#all-count').textContent=allCnt;
+  ['dashboard','all','done','settings'].forEach(v=>{const el=document.getElementById('nav-'+v);if(el)el.classList.toggle('active',V.view===v);});
+}
+
+/*═══════════════════════════════════════════════
+  FILTERBAR — rebuilt each render to keep state
+═══════════════════════════════════════════════*/
+function renderFilterbar(){
+  const bar=$('#filterbar');
+  const activeFilterCount=Object.values(V.filters).reduce((a,b)=>a+b.length,0);
+  const sortLabel=SORT_OPTIONS.find(o=>o.id===V.sort)?.label||'';
+  bar.innerHTML=`
+    <span class="flabel">Filtres</span>
+    <div class="fgroup" data-fg="soc"><button class="fbtn${V.filters.soc.length?' on':''}" onclick="openMenu('soc',event)">Société <span class="chev"></span></button></div>
+    <div class="fgroup" data-fg="cat"><button class="fbtn${V.filters.cat.length?' on':''}" onclick="openMenu('cat',event)">Catégorie <span class="chev"></span></button></div>
+    <div class="fgroup" data-fg="prio"><button class="fbtn${V.filters.prio.length?' on':''}" onclick="openMenu('prio',event)">Priorité <span class="chev"></span></button></div>
+    <div class="fgroup" data-fg="status"><button class="fbtn${V.filters.status.length?' on':''}" onclick="openMenu('status',event)">Statut <span class="chev"></span></button></div>
+    <div class="fgroup" data-fg="date"><button class="fbtn${V.filters.date.length?' on':''}" onclick="openMenu('date',event)">Date <span class="chev"></span></button></div>
+    <div class="fsep"></div>
+    <span class="flabel">Trier</span>
+    <div class="fgroup" data-fg="sort"><button class="fbtn${V.sort!=='date-asc'?' on':''}" onclick="openMenu('sort',event)">${esc(sortLabel)} <span class="chev"></span></button></div>
+    <div class="fsep"></div>
+    <button class="fbtn-plain" onclick="selectAllFilters()">Toutes</button>
+    <button class="fbtn-plain" onclick="resetFilters()">Aucun</button>
+  `;
+  if(V.openMenuKey)renderOpenMenu();
+}
+
+function openMenu(key,e){
+  e.stopPropagation();
+  V.openMenuKey=V.openMenuKey===key?null:key;
+  renderOpenMenu();
+}
+
+function closeMenu(){V.openMenuKey=null;document.querySelectorAll('.dd').forEach(el=>el.remove());}
+
+function renderOpenMenu(){
+  // Remove any existing menu
+  document.querySelectorAll('.dd').forEach(el=>el.remove());
+  if(!V.openMenuKey)return;
+  const key=V.openMenuKey;
+  const group=document.querySelector(`.fgroup[data-fg="${key}"]`);
+  if(!group)return;
+  const dd=document.createElement('div');
+  dd.className='dd';
+  dd.onclick=e=>e.stopPropagation();
+
+  if(key==='soc'){
+    dd.innerHTML=D.spaces.map(sp=>{
+      const on=V.filters.soc.includes(sp.name);
+      const col=COLORS[sp.color%COLORS.length];
+      return`<div class="dd-item" onclick="toggleFilter('soc',${JSON.stringify(sp.name)})">
+        <div class="dd-ck${on?' on':''}">${on?'<div class="dd-ck-i"></div>':''}</div>
+        <span style="width:7px;height:7px;border-radius:50%;background:${col};display:inline-block;"></span>${esc(sp.name)}
+      </div>`;
+    }).join('');
+  }else if(key==='cat'){
+    dd.innerHTML=D.cats.map(c=>{
+      const on=V.filters.cat.includes(c.name);
+      const col=COLORS[c.color%COLORS.length];
+      return`<div class="dd-item" onclick="toggleFilter('cat',${JSON.stringify(c.name)})">
+        <div class="dd-ck${on?' on':''}">${on?'<div class="dd-ck-i"></div>':''}</div>
+        <span style="width:7px;height:7px;border-radius:50%;background:${col};display:inline-block;"></span>${esc(c.name)}
+      </div>`;
+    }).join('');
+  }else if(key==='prio'){
+    dd.innerHTML=D.prios.map(p=>{
+      const on=V.filters.prio.includes(p.name);
+      const bc=BADGE_COLORS[p.color%BADGE_COLORS.length];
+      return`<div class="dd-item" onclick="toggleFilter('prio',${JSON.stringify(p.name)})">
+        <div class="dd-ck${on?' on':''}">${on?'<div class="dd-ck-i"></div>':''}</div>
+        <span class="badge" style="background:${bc.bg};color:${bc.txt};">${esc(p.name)}</span>
+      </div>`;
+    }).join('');
+  }else if(key==='status'){
+    dd.innerHTML=STATUSES.map(s=>{
+      const on=V.filters.status.includes(s);
+      return`<div class="dd-item" onclick="toggleFilter('status',${JSON.stringify(s)})">
+        <div class="dd-ck${on?' on':''}">${on?'<div class="dd-ck-i"></div>':''}</div>
+        <span class="sdot" style="background:${statusDotColor(s)};"></span>${s}
+      </div>`;
+    }).join('');
+  }else if(key==='date'){
+    dd.innerHTML=DATE_FILTERS.map(f=>{
+      const on=V.filters.date.includes(f);
+      return`<div class="dd-item" onclick="toggleFilter('date',${JSON.stringify(f)})">
+        <div class="dd-ck${on?' on':''}">${on?'<div class="dd-ck-i"></div>':''}</div>${f}
+      </div>`;
+    }).join('');
+  }else if(key==='sort'){
+    dd.innerHTML=SORT_OPTIONS.map(o=>{
+      const on=V.sort===o.id;
+      return`<div class="dd-item" onclick="setSort(${JSON.stringify(o.id)})">
+        <div class="dd-radio${on?' on':''}">${on?'<div class="dd-radio-i"></div>':''}</div>${esc(o.label)}
+      </div>`;
+    }).join('');
+  }
+  group.appendChild(dd);
+}
+
+function toggleFilter(key,val){
+  const arr=V.filters[key];
+  const i=arr.indexOf(val);
+  if(i===-1)arr.push(val);else arr.splice(i,1);
+  renderFilterbar();renderChips();render();
+}
+
+function setSort(id){
+  V.sort=id;V.openMenuKey=null;
+  renderFilterbar();renderChips();render();
+}
+
+function resetFilters(){
+  V.filters={soc:[],cat:[],prio:[],status:[],date:[]};
+  V.sort='date-asc';V.openMenuKey=null;
+  renderFilterbar();renderChips();render();
+}
+
+function selectAllFilters(){
+  V.filters.soc=D.spaces.map(s=>s.name);
+  V.filters.cat=D.cats.map(c=>c.name);
+  V.filters.prio=D.prios.map(p=>p.name);
+  V.filters.status=[...STATUSES];
+  V.openMenuKey=null;
+  renderFilterbar();renderChips();render();
+}
+
+function renderChips(){
+  const bar=$('#chips-bar');
+  let html='';let total=0;
+  Object.keys(V.filters).forEach(k=>{
+    V.filters[k].forEach(v=>{
+      total++;
+      html+=`<span class="chip">${esc(v)} <span class="chip-x" onclick="toggleFilter('${k}',${JSON.stringify(v)})">×</span></span>`;
+    });
+  });
+  if(V.sort!=='date-asc'){
+    const lbl=SORT_OPTIONS.find(o=>o.id===V.sort)?.label;
+    if(lbl)html+=`<span class="chip chip-sort">↕ ${esc(lbl)} <span class="chip-x" onclick="setSort('date-asc')">×</span></span>`;
+  }
+  bar.innerHTML=html;
+  bar.style.display=total>0||V.sort!=='date-asc'?'flex':'none';
+}
+
+function applyFilters(tasks){
+  return tasks.filter(t=>{
+    const sp=getSpace(t.spaceId);
+    if(V.filters.soc.length&&sp&&!V.filters.soc.includes(sp.name))return false;
+    if(V.filters.cat.length&&!V.filters.cat.includes(t.cat))return false;
+    if(V.filters.prio.length&&!V.filters.prio.includes(t.prio))return false;
+    if(V.filters.status.length&&!V.filters.status.includes(t.status))return false;
+    if(V.filters.date.length){
+      const match=V.filters.date.some(f=>{
+        if(f==="Aujourd'hui")return t.date===TODAY;
+        if(f==='En retard')return t.date&&t.date<TODAY&&t.status!=='Terminé';
+        if(f==='Cette semaine'){
+          const d=new Date(TODAY);
+          const mon=new Date(d);mon.setDate(d.getDate()-((d.getDay()||7)-1));
+          const sun=new Date(mon);sun.setDate(mon.getDate()+6);
+          return t.date>=mon.toISOString().slice(0,10)&&t.date<=sun.toISOString().slice(0,10);
+        }
+        if(f==='Ce mois')return t.date&&t.date.slice(0,7)===TODAY.slice(0,7);
+        return false;
+      });
+      if(!match)return false;
+    }
+    return true;
+  });
+}
+
+function applySort(tasks){
+  const sorted=[...tasks];
+  if(V.sort==='date-asc')sorted.sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
+  else if(V.sort==='date-desc')sorted.sort((a,b)=>(b.date||'0000').localeCompare(a.date||'0000'));
+  else if(V.sort==='prio-desc')sorted.sort((a,b)=>getPrioRank(b.prio)-getPrioRank(a.prio)||(a.date||'9999').localeCompare(b.date||'9999'));
+  else if(V.sort==='prio-asc')sorted.sort((a,b)=>getPrioRank(a.prio)-getPrioRank(b.prio)||(a.date||'9999').localeCompare(b.date||'9999'));
+  else if(V.sort==='created')sorted.sort((a,b)=>a.id-b.id);
+  return sorted;
+}
+
+/*═══════════════════════════════════════════════
+  GLOBAL CLICK — close menus & status popups
+═══════════════════════════════════════════════*/
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.fgroup')&&V.openMenuKey){V.openMenuKey=null;document.querySelectorAll('.dd').forEach(el=>el.remove());}
+  if(!e.target.closest('.status')&&V.openStatusId){V.openStatusId=null;document.querySelectorAll('.status-menu').forEach(el=>el.remove());}
+});
+
+/*═══════════════════════════════════════════════
+  RENDER ROUTER
+═══════════════════════════════════════════════*/
+function render(){
+  const c=$('#content');
+  if(V.view==='dashboard')c.innerHTML=viewDashboard();
+  else if(V.view==='space')c.innerHTML=viewSpaceTasks();
+  else if(V.view==='all')c.innerHTML=viewAllTasks();
+  else if(V.view==='done')c.innerHTML=viewDone();
+  else if(V.view==='settings')c.innerHTML=viewSettings();
+}
+
+/*═══════════════════════════════════════════════
+  DASHBOARD
+═══════════════════════════════════════════════*/
+function viewDashboard(){
+  const active=D.tasks.filter(t=>t.status!=='Terminé'&&!t.archived);
+  const done=D.tasks.filter(t=>t.status==='Terminé'&&!t.archived);
+  const late=active.filter(t=>isLate(t.date));
+  const prio=active.filter(t=>t.prio==='Prioritaire'||t.prio==='Urgent');
+
+  const bySpace={};D.spaces.forEach(sp=>{bySpace[sp.id]=active.filter(t=>t.spaceId===sp.id).length;});
+  const pie=buildPie(D.spaces.map(sp=>({label:sp.name,val:bySpace[sp.id],color:COLORS[sp.color%COLORS.length]})));
+
+  const byStatus={};STATUSES.slice(0,3).forEach(s=>{byStatus[s]=active.filter(t=>t.status===s).length;});
+  const statusColors={'À faire':'#9ca3af','En attente':'#d97706','En cours':'#1a56a0'};
+  const pieStatus=buildPie(Object.keys(byStatus).map(s=>({label:s,val:byStatus[s],color:statusColors[s]})));
+
+  const recent=[...active].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).slice(0,8);
+  const recentHtml=recent.length?recent.map(t=>`
+    <div class="task" style="padding:8px 12px;">
+      <span class="sdot" style="background:${statusDotColor(t.status)};margin-top:7px;"></span>
+      <div class="tbody">
+        <div class="ttl" style="font-size:12px;">${esc(t.title)}</div>
+        <div class="tmeta">
+          <span class="badge b-soc">${esc(getSpaceName(t.spaceId))}</span>
+          ${prioBadge(t.prio)}
+          <span class="badge ${isLate(t.date)?'b-late':'b-date'}">${fmtDate(t.date)}${isLate(t.date)?' — retard':''}</span>
+        </div>
+      </div>
+    </div>`).join(''):'<div class="empty">Aucune tâche</div>';
+
+  return`
+    <div class="stat-row">
+      <div class="stat"><div class="stat-num">${active.length}</div><div class="stat-lbl">En cours</div></div>
+      <div class="stat"><div class="stat-num">${done.length}</div><div class="stat-lbl">Terminées</div></div>
+      <div class="stat"><div class="stat-num" style="color:var(--red);">${late.length}</div><div class="stat-lbl">En retard</div></div>
+      <div class="stat"><div class="stat-num" style="color:#9d174d;">${prio.length}</div><div class="stat-lbl">Prioritaires</div></div>
+    </div>
+    <div class="dash">
+      <div class="ss"><div class="ss-title">Tâches par société</div>${pie}</div>
+      <div class="ss"><div class="ss-title">Par statut</div>${pieStatus}</div>
+      <div class="ss" style="grid-column:1/-1;"><div class="ss-title">Tâches actives — ${active.length}</div>${recentHtml}</div>
+    </div>`;
+}
+
+function buildPie(slices){
+  const total=slices.reduce((a,b)=>a+b.val,0);
+  if(total===0){
+    return`<div class="pie-wrap">
+      <svg width="130" height="130" viewBox="0 0 130 130">
+        <circle cx="65" cy="65" r="50" fill="none" stroke="#e5e7eb" stroke-width="22"/>
+        <text x="65" y="65" text-anchor="middle" dominant-baseline="central" font-size="14" fill="#a8a79f">0</text>
+      </svg>
+      <div class="pie-legend"><div class="legend-item" style="color:var(--text-3);">Aucune donnée</div></div>
+    </div>`;
+  }
+  const r=50,cx=65,cy=65,circ=2*Math.PI*r;let offset=0;
+  const svg=slices.filter(s=>s.val>0).map(s=>{
+    const pct=s.val/total,dash=pct*circ,gap=circ-dash,rot=offset*360;
+    offset+=pct;
+    return`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.color}" stroke-width="22" stroke-dasharray="${dash.toFixed(2)} ${gap.toFixed(2)}" stroke-dashoffset="${(circ/4).toFixed(2)}" transform="rotate(${rot.toFixed(1)} ${cx} ${cy})"/>`;
+  }).join('');
+  const legend=slices.filter(s=>s.val>0).map(s=>`<div class="legend-item"><span class="legend-dot" style="background:${s.color};"></span>${esc(s.label)}<span class="legend-val">${s.val}</span></div>`).join('');
+  return`<div class="pie-wrap">
+    <svg width="130" height="130" viewBox="0 0 130 130">${svg}
+      <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-size="18" font-weight="600" fill="#1c1b18">${total}</text>
+    </svg>
+    <div class="pie-legend">${legend}</div>
+  </div>`;
+}
+
+/*═══════════════════════════════════════════════
+  SPACE / ALL / DONE VIEWS
+═══════════════════════════════════════════════*/
+function viewSpaceTasks(){
+  const sp=D.spaces[V.space];
+  const spaceTasks=D.tasks.filter(t=>t.spaceId===sp.id&&!t.archived);
+  const active=applySort(applyFilters(spaceTasks.filter(t=>t.status!=='Terminé')));
+  const done=spaceTasks.filter(t=>t.status==='Terminé');
+  let h=`<div class="slabel">En cours — ${active.length} tâche${active.length!==1?'s':''}</div>`;
+  if(!active.length)h+='<div class="empty">Aucune tâche en cours</div>';
+  active.forEach(t=>h+=taskCard(t,false));
+  if(done.length){
+    h+=`<div class="done-toggle" onclick="V.doneOpen=!V.doneOpen;render()">
+      <span>${V.doneOpen?'▾':'▸'}</span><span>Terminées (${done.length})</span>
+      <span style="margin-left:auto;font-size:11px;">archivage après 2 jours</span>
+    </div>`;
+    if(V.doneOpen)done.forEach(t=>h+=taskCard(t,false));
+  }
+  return h;
+}
+
+function viewAllTasks(){
+  const active=applySort(applyFilters(D.tasks.filter(t=>t.status!=='Terminé'&&!t.archived)));
+  let h=`<div class="slabel">Toutes — ${active.length} tâche${active.length!==1?'s':''}</div>`;
+  if(!active.length)h+='<div class="empty">Aucune tâche</div>';
+  active.forEach(t=>h+=taskCard(t,true));
+  return h;
+}
+
+function viewDone(){
+  const done=D.tasks.filter(t=>t.status==='Terminé');
+  let h=`<div class="slabel">Terminées — ${done.length}</div>`;
+  if(!done.length)h+='<div class="empty">Aucune tâche terminée</div>';
+  done.forEach(t=>{
+    h+=`<div class="task done">
+      <div class="status"><div class="status-btn s-done"><span class="sdot" style="background:#16a34a;"></span>Terminé</div></div>
+      <div class="tbody">
+        <div class="ttl">${esc(t.title)}</div>
+        <div class="tmeta">
+          <span class="badge b-soc">${esc(getSpaceName(t.spaceId))}</span>
+          ${catBadge(t.cat)}
+          <span class="badge b-date">${fmtDate(t.date)}</span>
+        </div>
+      </div>
+      <div class="tacts"><button class="abtn primary" onclick="restoreTask(${t.id})">Restaurer</button></div>
+    </div>`;
+  });
+  return h;
+}
+
+function taskCard(t,showSpace){
+  const late=isLate(t.date)&&t.status!=='Terminé';
+  const statusMenu=V.openStatusId===t.id?`<div class="status-menu" onclick="event.stopPropagation()">
+    ${STATUSES.map(s=>`<div class="s-opt" onclick="setStatus(${t.id},'${s}')">
+      <span style="width:7px;height:7px;border-radius:50%;background:${statusDotColor(s)};"></span>${s}
+    </div>`).join('')}
+  </div>`:'';
+  const files=t.files&&t.files.length?`<div class="tfiles">${t.files.map((f,i)=>
+    `<span class="file-chip" onclick="openFile(${t.id},${i})" title="${esc(f.name)}">📎 ${esc(f.name.length>22?f.name.slice(0,20)+'…':f.name)}</span>`
+  ).join('')}</div>`:'';
+  return`<div class="task${t.status==='Terminé'?' done':''}">
+    <div class="status">
+      <div class="status-btn ${statusClass(t.status)}" onclick="openStatusMenu(${t.id},event)">
+        <span class="sdot" style="background:${statusDotColor(t.status)};"></span>${t.status} <span class="chev"></span>
+      </div>
+      ${statusMenu}
+    </div>
+    <div class="tbody">
+      <div class="ttl">${esc(t.title)}</div>
+      <div class="tmeta">
+        ${showSpace?`<span class="badge b-soc">${esc(getSpaceName(t.spaceId))}</span>`:''}
+        ${catBadge(t.cat)}${prioBadge(t.prio)}
+        <span class="badge ${late?'b-late':'b-date'}">${late?fmtDate(t.date)+' — retard':fmtDate(t.date)}</span>
+      </div>
+      ${t.comment?`<div class="tcom">${esc(t.comment)}</div>`:''}
+      ${files}
+    </div>
+    <div class="tacts">
+      <button class="abtn" onclick="postpone(${t.id})">+1j</button>
+      <button class="abtn primary" onclick="editTask(${t.id})">Modifier</button>
+    </div>
+  </div>`;
+}
+
+function catBadge(name){const c=getCatColor(name);return`<span class="badge" style="background:${c.bg};color:${c.txt};">${esc(name)}</span>`;}
+function prioBadge(name){const c=getPrioColor(name);return`<span class="badge" style="background:${c.bg};color:${c.txt};">${esc(name)}</span>`;}
+
+/*═══════════════════════════════════════════════
+  TASK ACTIONS
+═══════════════════════════════════════════════*/
+function openStatusMenu(id,e){e.stopPropagation();V.openStatusId=V.openStatusId===id?null:id;render();}
+function setStatus(id,status){
+  const t=D.tasks.find(x=>x.id===id);if(!t)return;
+  t.status=status;if(status==='Terminé')t.doneDate=TODAY;else delete t.doneDate;
+  V.openStatusId=null;saveData();renderSidebar();render();
+}
+function postpone(id){const t=D.tasks.find(x=>x.id===id);if(t){t.date=nextWorkday(t.date);saveData();render();toast('Reporté au '+fmtDate(t.date));}}
+function restoreTask(id){const t=D.tasks.find(x=>x.id===id);if(t){t.status='À faire';delete t.doneDate;saveData();renderSidebar();render();toast('Tâche restaurée');}}
+
+function openFile(tid,i){const t=D.tasks.find(x=>x.id===tid);if(!t||!t.files||!t.files[i])return;const f=t.files[i];if(!f.data)return toast('Fichier non disponible');const a=document.createElement('a');a.href=f.data;a.download=f.name;a.click();}
+
+/*═══════════════════════════════════════════════
+  SETTINGS
+═══════════════════════════════════════════════*/
+function viewSettings(){
+  const mkRow=(item,type,cnt,colorMode)=>{
+    const col=colorMode==='badge'?BADGE_COLORS[item.color%BADGE_COLORS.length].txt:COLORS[item.color%COLORS.length];
+    return`<div class="ss-row">
+      ${colorMode==='badge'?`<span class="badge" style="background:${BADGE_COLORS[item.color%BADGE_COLORS.length].bg};color:${col};">${esc(item.name)}</span>`:`<div class="ss-dot" style="background:${col};"></div><span class="ss-name">${esc(item.name)}</span>`}
+      <span class="ss-cnt"${colorMode==='badge'?' style="margin-left:auto;"':''}>${cnt}</span>
+      <button class="ss-btn" onclick="editItem('${type}',${item.id})">Modifier</button>
+      ${cnt===0?`<button class="ss-btn del" onclick="deleteItem('${type}',${item.id})">Suppr.</button>`:`<button class="ss-btn" style="opacity:0.3;cursor:default;">Suppr.</button>`}
+    </div>`;
+  };
+  const spacesH=D.spaces.map(sp=>mkRow(sp,'space',D.tasks.filter(t=>t.spaceId===sp.id).length,'dot')).join('');
+  const catsH=D.cats.map(c=>mkRow(c,'cat',D.tasks.filter(t=>t.cat===c.name).length,'dot')).join('');
+  const priosH=D.prios.map(p=>mkRow(p,'prio',D.tasks.filter(t=>t.prio===p.name).length,'badge')).join('');
+  const cDots=COLORS.map((c,i)=>`<div class="cdot" style="background:${c};" data-color-idx="${i}"></div>`).join('');
+
+  return`<div class="settings">
+    <div class="ss">
+      <div class="ss-title">Espaces / Sociétés</div>
+      <div class="ss-list">${spacesH}</div>
+      <div class="cpicker" data-picker="space">${cDots}</div>
+      <div class="ss-add">
+        <input class="ss-inp" id="new-space-inp" placeholder="Nouvel espace…" onkeydown="if(event.key==='Enter')addItem('space')"/>
+        <button class="ss-add-btn" onclick="addItem('space')">Ajouter</button>
+      </div>
+    </div>
+    <div class="ss">
+      <div class="ss-title">Catégories</div>
+      <div class="ss-list">${catsH}</div>
+      <div class="cpicker" data-picker="cat">${cDots}</div>
+      <div class="ss-add">
+        <input class="ss-inp" id="new-cat-inp" placeholder="Nouvelle catégorie…" onkeydown="if(event.key==='Enter')addItem('cat')"/>
+        <button class="ss-add-btn" onclick="addItem('cat')">Ajouter</button>
+      </div>
+    </div>
+    <div class="ss">
+      <div class="ss-title">Priorités (ordre = importance)</div>
+      <div class="ss-list">${priosH}</div>
+      <div class="cpicker" data-picker="prio">${BADGE_COLORS.map((c,i)=>`<div class="cdot" style="background:${c.txt};border-radius:4px;width:26px;height:16px;" data-color-idx="${i}"></div>`).join('')}</div>
+      <div class="ss-add">
+        <input class="ss-inp" id="new-prio-inp" placeholder="Nouvelle priorité…" onkeydown="if(event.key==='Enter')addItem('prio')"/>
+        <button class="ss-add-btn" onclick="addItem('prio')">Ajouter</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// Color picker dots in settings
+document.addEventListener('click',e=>{
+  const dot=e.target.closest('.cdot');
+  if(dot&&dot.dataset.colorIdx!==undefined){
+    const picker=dot.closest('.cpicker');
+    if(picker){
+      picker.querySelectorAll('.cdot').forEach(d=>d.classList.remove('sel'));
+      dot.classList.add('sel');
+      const idx=parseInt(dot.dataset.colorIdx);
+      const type=picker.dataset.picker;
+      if(type==='space')V._newSpaceColor=idx;
+      else if(type==='cat')V._newCatColor=idx;
+      else if(type==='prio')V._newPrioColor=idx;
+    }
+  }
+});
+
+function addItem(type){
+  const inp=document.getElementById('new-'+type+'-inp');
+  const val=inp?.value.trim();if(!val)return;
+  const key=type+'s';
+  const maxId=Math.max(0,...D[key].map(x=>x.id));
+  const color=type==='space'?(V._newSpaceColor||0):type==='cat'?(V._newCatColor||0):(V._newPrioColor||0);
+  const item={id:maxId+1,name:val,color};
+  if(type==='prio')item.rank=(Math.max(0,...D.prios.map(p=>p.rank||0)))+1;
+  D[key].push(item);
+  inp.value='';saveData();renderSidebar();render();toast('Ajouté');
+}
+function deleteItem(type,id){
+  const key=type+'s';const arr=D[key];
+  const idx=arr.findIndex(x=>x.id===id);if(idx===-1)return;
+  if(type==='space'&&arr.length<=1)return toast('Au moins un espace requis');
+  arr.splice(idx,1);
+  if(V.space>=D.spaces.length)V.space=0;
+  saveData();renderSidebar();render();toast('Supprimé');
+}
+function editItem(type,id){
+  const key=type+'s';const item=D[key].find(x=>x.id===id);if(!item)return;
+  V.editColorIdx=item.color;
+  const dots=(type==='prio'?BADGE_COLORS:COLORS).map((c,i)=>{
+    const bg=type==='prio'?c.txt:c;
+    return`<div class="cdot${i===item.color?' sel':''}" style="background:${bg};${type==='prio'?'border-radius:4px;width:26px;height:16px;':''}" onclick="pickEditColor(this,${i})"></div>`;
+  }).join('');
+  openModal('Modifier',`
+    <div><div class="fl">Nom</div><input class="fi" id="m-name" value="${esc(item.name)}"/></div>
+    <div><div class="fl">Couleur</div><div class="cpicker" id="edit-color-picker">${dots}</div></div>
+  `,'Enregistrer',()=>{
+    const nn=document.getElementById('m-name').value.trim();if(!nn)return;
+    const oldName=item.name;item.name=nn;
+    if(V.editColorIdx!==undefined)item.color=V.editColorIdx;
+    if(oldName!==nn){
+      if(type==='cat')D.tasks.forEach(t=>{if(t.cat===oldName)t.cat=nn;});
+      if(type==='prio')D.tasks.forEach(t=>{if(t.prio===oldName)t.prio=nn;});
+    }
+    V.editColorIdx=undefined;saveData();closeModal();renderSidebar();render();toast('Modifié');
+  });
+}
+function pickEditColor(el,i){el.parentNode.querySelectorAll('.cdot').forEach(d=>d.classList.remove('sel'));el.classList.add('sel');V.editColorIdx=i;}
+
+/*═══════════════════════════════════════════════
+  ADD / EDIT TASK MODALS
+═══════════════════════════════════════════════*/
+function catOpts(sel){return D.cats.map(c=>`<option${c.name===sel?' selected':''}>${esc(c.name)}</option>`).join('');}
+function prioOpts(sel){return D.prios.map(p=>`<option${p.name===sel?' selected':''}>${esc(p.name)}</option>`).join('');}
+function statusOpts(sel){return STATUSES.map(s=>`<option${s===sel?' selected':''}>${s}</option>`).join('');}
+function spaceOpts(sel){return D.spaces.map(s=>`<option value="${s.id}"${s.id===sel?' selected':''}>${esc(s.name)}</option>`).join('');}
+
+function openAddTask(){
+  const spaceId=V.view==='space'?D.spaces[V.space].id:D.spaces[0].id;
+  V.modalFiles=[];
+  openModal('Nouvelle tâche',`
+    <div><div class="fl">Titre *</div><input class="fi" id="m-title" placeholder="Titre…"/></div>
+    <div class="frow">
+      <div><div class="fl">Espace</div><select class="fi" id="m-space">${spaceOpts(spaceId)}</select></div>
+      <div><div class="fl">Catégorie</div><select class="fi" id="m-cat">${catOpts(D.cats[0]?.name)}</select></div>
+    </div>
+    <div class="frow">
+      <div><div class="fl">Date deadline</div><input class="fi" id="m-date" type="date" value="${TODAY}"/></div>
+      <div><div class="fl">Priorité</div><select class="fi" id="m-prio">${prioOpts('Moyen')}</select></div>
+    </div>
+    <div><div class="fl">Statut</div><select class="fi" id="m-status">${statusOpts('À faire')}</select></div>
+    <div><div class="fl">Commentaire</div><textarea class="fi" id="m-comment" rows="2"></textarea></div>
+    <div>
+      <div class="fl">Pièces jointes</div>
+      <label class="attach-zone">📎 Joindre des fichiers<input type="file" multiple style="display:none;" onchange="addModalFile(this)"/></label>
+      <div class="fmodal-list" id="modal-flist"></div>
+    </div>
+  `,'Ajouter',()=>{
+    const title=document.getElementById('m-title').value.trim();if(!title)return toast('Titre requis');
+    const t={id:D.nextId++,title,
+      spaceId:parseInt(document.getElementById('m-space').value),
+      cat:document.getElementById('m-cat').value,
+      date:document.getElementById('m-date').value,
+      prio:document.getElementById('m-prio').value,
+      status:document.getElementById('m-status').value,
+      comment:document.getElementById('m-comment').value,
+      files:[...V.modalFiles]};
+    if(t.status==='Terminé')t.doneDate=TODAY;
+    D.tasks.push(t);
+    saveData();closeModal();renderSidebar();render();toast('Tâche créée');
+  });
+}
+
+function editTask(id){
+  const t=D.tasks.find(x=>x.id===id);if(!t)return;
+  V.modalFiles=t.files?[...t.files]:[];
+  openModal('Modifier la tâche',`
+    <div><div class="fl">Titre</div><input class="fi" id="m-title" value="${esc(t.title)}"/></div>
+    <div class="frow">
+      <div><div class="fl">Espace</div><select class="fi" id="m-space">${spaceOpts(t.spaceId)}</select></div>
+      <div><div class="fl">Catégorie</div><select class="fi" id="m-cat">${catOpts(t.cat)}</select></div>
+    </div>
+    <div class="frow">
+      <div><div class="fl">Date deadline</div><input class="fi" id="m-date" type="date" value="${t.date}"/></div>
+      <div><div class="fl">Priorité</div><select class="fi" id="m-prio">${prioOpts(t.prio)}</select></div>
+    </div>
+    <div><div class="fl">Statut</div><select class="fi" id="m-status">${statusOpts(t.status)}</select></div>
+    <div><div class="fl">Commentaire</div><textarea class="fi" id="m-comment" rows="2">${esc(t.comment||'')}</textarea></div>
+    <div>
+      <div class="fl">Pièces jointes</div>
+      <label class="attach-zone">📎 Joindre des fichiers<input type="file" multiple style="display:none;" onchange="addModalFile(this)"/></label>
+      <div class="fmodal-list" id="modal-flist"></div>
+    </div>
+    <div style="border-top:0.5px solid var(--border);padding-top:12px;"><button class="btn-del" onclick="deleteTask(${id})">Supprimer la tâche</button></div>
+  `,'Enregistrer',()=>{
+    const title=document.getElementById('m-title').value.trim();
+    if(title)t.title=title;
+    t.spaceId=parseInt(document.getElementById('m-space').value);
+    t.cat=document.getElementById('m-cat').value;
+    t.date=document.getElementById('m-date').value;
+    t.prio=document.getElementById('m-prio').value;
+    const ns=document.getElementById('m-status').value;
+    if(ns==='Terminé'&&t.status!=='Terminé')t.doneDate=TODAY;
+    if(ns!=='Terminé')delete t.doneDate;
+    t.status=ns;
+    t.comment=document.getElementById('m-comment').value;
+    t.files=[...V.modalFiles];
+    saveData();closeModal();renderSidebar();render();toast('Modifié');
+  });
+  renderModalFiles();
+}
+
+function deleteTask(id){
+  if(!confirm('Supprimer définitivement cette tâche ?'))return;
+  D.tasks=D.tasks.filter(x=>x.id!==id);
+  saveData();closeModal();renderSidebar();render();toast('Tâche supprimée');
+}
+
+function addModalFile(input){
+  if(!input.files.length)return;
+  let processed=0;const total=input.files.length;
+  Array.from(input.files).forEach(f=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      V.modalFiles.push({name:f.name,size:f.size,type:f.type,data:e.target.result});
+      processed++;
+      if(processed===total)renderModalFiles();
+    };
+    reader.readAsDataURL(f);
+  });
+}
+function renderModalFiles(){
+  const list=document.getElementById('modal-flist');if(!list)return;
+  list.innerHTML=V.modalFiles.map((f,i)=>`<div class="fmodal-row">
+    <span class="fmodal-name">📎 ${esc(f.name)}</span>
+    <span class="attach-x" onclick="removeModalFile(${i})">×</span>
+  </div>`).join('');
+}
+function removeModalFile(i){V.modalFiles.splice(i,1);renderModalFiles();}
+
+/*═══════════════════════════════════════════════
+  MODAL FRAMEWORK
+═══════════════════════════════════════════════*/
+function openModal(title,body,btnLabel,onSave){
+  const ex=document.querySelector('.overlay');if(ex)ex.remove();
+  const ov=document.createElement('div');
+  ov.className='overlay';
+  ov.onclick=e=>{if(e.target===ov)closeModal();};
+  ov.innerHTML=`<div class="modal">
+    <div class="mh">
+      <div class="mh-title">${esc(title)}</div>
+      <button class="mclose" onclick="closeModal()">×</button>
+    </div>
+    <div class="mb">${body}</div>
+    <div class="mf">
+      <button class="btn-c" onclick="closeModal()">Annuler</button>
+      <button class="btn-s" id="modal-save-btn">${esc(btnLabel)}</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  document.getElementById('modal-save-btn').onclick=onSave;
+  setTimeout(()=>{const first=document.getElementById('m-title')||document.getElementById('m-name');if(first)first.focus();},40);
+}
+function closeModal(){const o=document.querySelector('.overlay');if(o)o.remove();}
+
+/*═══════════════════════════════════════════════
+  INIT
+═══════════════════════════════════════════════*/
+renderSidebar();
+updateChrome();
+render();
+</script>
+</body>
+</html>
